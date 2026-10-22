@@ -5,7 +5,7 @@ import publishedResults from './data/published-results.json';
 
 const API = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000/api';
 const COLORS = ['#ef4444', '#f97316', '#eab308', '#60a5fa', '#2563eb'];
-const isLocalRuntime = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+const isLocalRuntime = import.meta.env.DEV || ['localhost', '127.0.0.1'].includes(window.location.hostname);
 
 export default function App() {
   const [ratings, setRatings] = useState(isLocalRuntime ? [] : publishedResults);
