@@ -1,5 +1,13 @@
 # Amazon Review Rating Analytics — Website
 
+## Live dashboard
+
+View the deployed dashboard at [amazon-review-analytics.vercel.app](https://amazon-review-analytics.vercel.app).
+
+The Vercel deployment displays the latest published Hadoop reducer output, including
+the rating charts and summary metrics. Running a new Hadoop job requires the local
+Windows backend and Hadoop installation described below.
+
 ## Stack
 - Frontend: React + Vite
 - Backend: Python Flask
@@ -7,7 +15,10 @@
 - Intended for the existing Windows Hadoop setup.
 
 ## Important
-This backend runs commands on the SAME Windows machine where Hadoop is installed. Hosting the frontend online will not make the local Hadoop cluster accessible. For today's demo, run frontend and backend locally on your Hadoop machine.
+This backend runs commands on the SAME Windows machine where Hadoop is installed.
+Hosting the frontend online does not make the local Hadoop cluster accessible. Use
+the deployed dashboard to view published results; run the frontend and backend
+locally on your Hadoop machine to execute or refresh a Hadoop job.
 
 ## 1. Expected existing files
 Check these exist:
