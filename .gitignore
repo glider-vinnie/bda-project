@@ -1,0 +1,13 @@
+# Dependencies and generated builds
+frontend/node_modules/
+frontend/dist/
+backend/.venv/
+__pycache__/
+*.py[cod]
+
+# Local deployment metadata and environment files
+frontend/.vercel/
+.vercel/
+.env
+.env.*
+!.env.example
