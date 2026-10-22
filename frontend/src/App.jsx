@@ -1,15 +1,21 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { BarChart3, Database, FileText, Gauge, Layers3, Play, RefreshCw, Star, CircleCheck, AlertTriangle } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import publishedResults from './data/published-results.json';
 
 const API = import.meta.env.VITE_API_URL || 'http://127.0.0.1:5000/api';
 const COLORS = ['#ef4444', '#f97316', '#eab308', '#60a5fa', '#2563eb'];
+const isLocalRuntime = ['localhost', '127.0.0.1'].includes(window.location.hostname);
 
 export default function App() {
-  const [ratings, setRatings] = useState([]);
+  const [ratings, setRatings] = useState(isLocalRuntime ? [] : publishedResults);
   const [health, setHealth] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState('Connect to the local Flask backend to load Hadoop output.');
+  const [message, setMessage] = useState(
+    isLocalRuntime
+      ? 'Connect to the local Flask backend to load Hadoop output.'
+      : 'Showing the latest published Hadoop reducer output.'
+  );
   const [error, setError] = useState('');
   const total = useMemo(() => ratings.reduce((s, r) => s + r.count, 0), [ratings]);
   const fiveStar = ratings.find(r => Number(r.rating) === 5)?.count || 0;
@@ -17,6 +23,7 @@ export default function App() {
   const chartData = ratings.map(r => ({ ...r, label: `${r.rating} star${r.rating === 1 ? '' : 's'}`, percent: total ? +(100*r.count/total).toFixed(2) : 0 }));
 
   async function checkHealth() {
+    if (!isLocalRuntime) return;
     try {
       const res = await fetch(`${API}/health`);
       const data = await res.json();
@@ -32,6 +39,12 @@ export default function App() {
 
   async function loadResults() {
     setLoading(true); setError('');
+    if (!isLocalRuntime) {
+      setRatings(publishedResults);
+      setMessage('Showing the latest published Hadoop reducer output.');
+      setLoading(false);
+      return;
+    }
     try {
       const res = await fetch(`${API}/results`);
       const data = await res.json();
@@ -43,6 +56,10 @@ export default function App() {
   }
 
   async function runJob() {
+    if (!isLocalRuntime) {
+      setError('Hadoop jobs run only in the local Windows setup. The deployed dashboard shows the latest published reducer output.');
+      return;
+    }
     setLoading(true); setError(''); setMessage('Submitting Hadoop Streaming job. This may take several minutes…');
     try {
       const res = await fetch(`${API}/run`, { method: 'POST' });
@@ -63,14 +80,14 @@ export default function App() {
       <div className="nav-item active"><Gauge size={18}/> Overview</div>
       <div className="nav-item"><Database size={18}/> Dataset & pipeline</div>
       <div className="nav-item"><Layers3 size={18}/> MapReduce workflow</div>
-      <div className="sidebar-bottom"><div className="status-dot"/><div><b>Local Hadoop cluster</b><span>{health ? 'Backend reachable' : 'Checking connection…'}</span></div></div>
+      <div className="sidebar-bottom"><div className="status-dot"/><div><b>{isLocalRuntime ? 'Local Hadoop cluster' : 'Published dashboard'}</b><span>{isLocalRuntime ? (health ? 'Backend reachable' : 'Checking connection…') : 'Latest reducer output'}</span></div></div>
     </aside>
 
     <main className="main">
       <header className="topbar"><div><span className="eyebrow">DATA ENGINEERING PROJECT</span><h1>Amazon Review Analytics</h1><p>Understand customer rating patterns with Hadoop MapReduce.</p></div><div className="top-tag"><Database size={15}/> Hadoop Streaming</div></header>
 
       <section className="hero">
-        <div className="hero-copy"><div className="hero-pill"><span/> DISTRIBUTED PROCESSING</div><h2>From raw reviews<br/>to useful insights.</h2><p>Aggregate review ratings at scale using a Python mapper, Hadoop shuffle and sort, and a reducer.</p><div className="hero-actions"><button className="primary-btn" onClick={runJob} disabled={loading}><Play size={16} fill="currentColor"/>{loading ? 'Processing…' : 'Run Hadoop analysis'}</button><button className="secondary-btn" onClick={loadResults} disabled={loading}><RefreshCw size={16}/> Load existing results</button></div></div>
+        <div className="hero-copy"><div className="hero-pill"><span/> DISTRIBUTED PROCESSING</div><h2>From raw reviews<br/>to useful insights.</h2><p>Aggregate review ratings at scale using a Python mapper, Hadoop shuffle and sort, and a reducer.</p><div className="hero-actions"><button className="primary-btn" onClick={runJob} disabled={loading || !isLocalRuntime}><Play size={16} fill="currentColor"/>{loading ? 'Processing…' : isLocalRuntime ? 'Run Hadoop analysis' : 'Run locally'}</button><button className="secondary-btn" onClick={loadResults} disabled={loading}><RefreshCw size={16}/> {isLocalRuntime ? 'Load existing results' : 'Reload published results'}</button></div></div>
         <div className="hero-art"><div className="art-ring ring-one"/><div className="art-ring ring-two"/><div className="art-center"><BarChart3 size={42}/><span>MAP<br/>REDUCE</span></div><div className="floating-chip chip-a"><Database size={16}/> HDFS input</div><div className="floating-chip chip-b"><CircleCheck size={16}/> Aggregation</div></div>
       </section>
 
